@@ -11,8 +11,8 @@ let useLocalBinary = FileManager.default.fileExists(
 )
 
 // --- Release coordinates (updated by scripts/release.sh) ---
-let releaseURL = "https://github.com/user/SwiftPROJ/releases/download/0.0.0/PROJ.xcframework.zip"
-let releaseChecksum = "0000000000000000000000000000000000000000000000000000000000000000"
+let releaseURL = "https://github.com/seriouscyrus/SwiftPROJ/releases/download/0.1.0/PROJ.xcframework.zip"
+let releaseChecksum = "648b01cd4a4473ee241308a03faf510615f8e0b2614e592e867d19627359e5e1"
 // --- End release coordinates ---
 
 let projTarget: Target = useLocalBinary
