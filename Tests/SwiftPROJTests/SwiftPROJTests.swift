@@ -4,7 +4,7 @@ import SwiftPROJ
 
 @Test func wgs84ToSwissLV95() throws {
     // Create a PROJ context
-    let ctx = proj_context_create()
+    let ctx = try #require(proj_context_create())
     defer { proj_context_destroy(ctx) }
 
     // WGS84 (EPSG:4326) -> Swiss CH1903+ / LV95 (EPSG:2056)
@@ -44,7 +44,7 @@ import SwiftPROJ
 }
 
 @Test func networkBridgeEnablesNetworking() throws {
-    let ctx = proj_context_create()
+    let ctx = try #require(proj_context_create())
     defer { proj_context_destroy(ctx) }
 
     // Network should be disabled by default (built without CURL)
@@ -52,7 +52,7 @@ import SwiftPROJ
             "Network should be disabled before enabling bridge")
 
     // Enable networking via our URLSession bridge
-    PROJNetworkBridge.enableNetworking(on: ctx!)
+    PROJNetworkBridge.enableNetworking(on: ctx)
 
     // Verify network is now enabled
     #expect(proj_context_is_network_enabled(ctx) == 1,
@@ -65,11 +65,11 @@ import SwiftPROJ
 }
 
 @Test func networkBridgeCustomEndpoint() throws {
-    let ctx = proj_context_create()
+    let ctx = try #require(proj_context_create())
     defer { proj_context_destroy(ctx) }
 
     let customEndpoint = "https://example.com/proj/"
-    PROJNetworkBridge.enableNetworking(on: ctx!, endpoint: customEndpoint)
+    PROJNetworkBridge.enableNetworking(on: ctx, endpoint: customEndpoint)
 
     let endpoint = String(cString: proj_context_get_url_endpoint(ctx))
     #expect(endpoint == customEndpoint,
@@ -77,15 +77,15 @@ import SwiftPROJ
 }
 
 @Test func gridDiscoveryForSwissTransformation() throws {
-    let ctx = proj_context_create()
+    let ctx = try #require(proj_context_create())
     defer { proj_context_destroy(ctx) }
 
     // Enable networking so PROJ knows grids are potentially available
-    PROJNetworkBridge.enableNetworking(on: ctx!)
+    PROJNetworkBridge.enableNetworking(on: ctx)
 
     // Query which grids are needed for WGS84 3D -> Swiss LV95 + LN02 height
     let grids = PROJNetworkBridge.gridsUsed(
-        context: ctx!,
+        context: ctx,
         source: "EPSG:4979",
         target: "EPSG:2056+5728"
     )
@@ -106,18 +106,18 @@ import SwiftPROJ
     print("Missing grids that need downloading: \(missingGrids.count)")
     for grid in missingGrids {
         let needsDownload = PROJNetworkBridge.isDownloadNeeded(
-            context: ctx!, for: grid.shortName
+            context: ctx, for: grid.shortName
         )
         print("  - \(grid.shortName): download needed = \(needsDownload)")
     }
 }
 
 @Test func downloadAndUseSwissGeoidGrid() throws {
-    let ctx = proj_context_create()
+    let ctx = try #require(proj_context_create())
     defer { proj_context_destroy(ctx) }
 
     // Enable networking
-    PROJNetworkBridge.enableNetworking(on: ctx!)
+    PROJNetworkBridge.enableNetworking(on: ctx)
 
     // Create 3D transformation: WGS84 geographic 3D -> Swiss LV95 + LN02 height
     let transform = proj_create_crs_to_crs(
@@ -131,12 +131,12 @@ import SwiftPROJ
 
     // Find missing grids and download them
     let grids = PROJNetworkBridge.gridsUsed(
-        context: ctx!, source: "EPSG:4979", target: "EPSG:2056+5728"
+        context: ctx, source: "EPSG:4979", target: "EPSG:2056+5728"
     )
     for grid in grids where !grid.available {
         print("Downloading grid: \(grid.shortName)...")
         let success = PROJNetworkBridge.downloadFile(
-            context: ctx!,
+            context: ctx,
             urlOrFilename: grid.url.isEmpty ? grid.shortName : grid.url,
             progress: { pct in
                 if pct.truncatingRemainder(dividingBy: 25) < 1 {
